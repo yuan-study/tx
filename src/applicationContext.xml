@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+           http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+           http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd
+           http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd
+           http://www.springframework.org/schema/jdbc http://www.springframework.org/schema/jdbc/spring-jdbc.xsd">
+
+
+    <bean class="com.tx.utils.TxUtils" id="txUtils"/>
+
+    <aop:aspectj-autoproxy/>
+
+    <aop:config>
+        <aop:aspect ref="txUtils">
+            <aop:around method="interConnection" pointcut="execution(* *..getConnection(..))"/>
+            <aop:around method="interceptService" pointcut="execution(* com.tx..*Service.*(..))"/>
+        </aop:aspect>
+    </aop:config>
+
+    <!-- 配置数据源 -->
+    <bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource">
+        <constructor-arg value="yuan"/>
+    </bean>
+
+    <!--业务类-->
+    <bean id="action" class="com.tx.myself.Action">
+        <property name="service">
+            <bean class="com.tx.myself.Service">
+                <property name="dao">
+                    <bean class="com.tx.myself.Dao">
+                        <property name="dataSource" ref="dataSource"/>
+                    </bean>
+                </property>
+            </bean>
+        </property>
+    </bean>
+
+<!--    <bean class="com.cglib.demo.PersonProxy"/>
+    <bean id="person" class="com.cglib.demo.Person"></bean>-->
+
+</beans>
